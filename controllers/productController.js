@@ -345,11 +345,11 @@ const getFilteredProducts = async (req, res) => {
     //   query.materials = value;
     // }
     else if (key === "price") {
-      if (value == "Under MAD100") {
+      if (value == "Under DH100") {
         query.price = { $lt: 100 };
-      } else if (value == "MAD100 - MAD200") {
+      } else if (value == "DH100 - DH200") {
         query.price = { $gte: 100, $lte: 200 };
-      } else if (value == "Over MAD200") {
+      } else if (value == "Over DH200") {
         query.price = { $gt: 200 };
       }
     } else if (key === "sort") {

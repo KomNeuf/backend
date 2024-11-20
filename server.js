@@ -17,6 +17,7 @@ const advertiseRoutes = require("./routes/advertiseRoutes");
 const contactUsRoutes = require("./routes/contactRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGODB_URI, {});
@@ -74,6 +75,32 @@ async function getExchangeRate() {
   );
   return response.data.rates.EUR;
 }
+
+app.post("/create-payment-intent", async (req, res) => {
+  const { amount } = req.body;
+  if (!amount || isNaN(amount)) {
+    return res.status(400).json({ error: "Invalid amount provided." });
+  }
+
+  try {
+    const exchangeRate = await getExchangeRate();
+    const amountInEUR = Math.round(amount * exchangeRate);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInEUR,
+      currency: "eur",
+      payment_method_types: ["card"],
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    res.status(500).send({
+      error: error.message,
+    });
+  }
+});
 
 io.on("connection", (socket) => {
   // console.log("A user connected:", socket.id);
