@@ -308,10 +308,13 @@ const searchProduct = async (req, res) => {
 
 const getFilteredProducts = async (req, res) => {
   const filters = req.query;
-  const { searchQuery } = req.query;
+  const { searchQuery, seeAll } = req.query;
   const query = {};
   const sort = {};
-  if (searchQuery) {
+
+  if (seeAll) {
+    query.category = seeAll.toLowerCase().replace(/\s+/g, "-");
+  } else if (searchQuery) {
     const regex = new RegExp(searchQuery, "i");
     query.$or = [
       { title: { $regex: regex } },
