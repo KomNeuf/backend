@@ -43,6 +43,11 @@ const productSchema = new mongoose.Schema(
     materials: {
       type: String,
     },
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1,
+    },
     visibleStatus: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],

@@ -199,6 +199,31 @@ exports.getSingleUser = async (req, res) => {
   }
 };
 
+exports.getSingleUserByName = async (req, res) => {
+  try {
+    let username = req.params.username.replace(/-/g, " ");
+
+    const user = await User.findOne({ name: username })
+      .populate("followers", "name avatar")
+      .populate("following", "name avatar");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;

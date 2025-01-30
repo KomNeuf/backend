@@ -208,7 +208,10 @@ const getProductById = async (req, res) => {
   const { productId } = req.params;
 
   try {
-    const product = await Product.findById(productId).populate("userId").exec();
+    const product = await Product.findById(productId)
+      .populate("userId")
+      .sort({ createdAt: -1 })
+      .exec();
 
     if (!product) {
       return res.status(404).json({
@@ -503,6 +506,7 @@ const getSimilarProducts = async (req, res) => {
   try {
     const currentProduct = await Product.findById(productId)
       .populate("userId")
+      .sort({ createdAt: -1 })
       .exec();
 
     if (!currentProduct) {

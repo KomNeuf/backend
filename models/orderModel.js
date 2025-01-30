@@ -28,7 +28,9 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-
+  quantity: {
+    type: Number,
+  },
   paymentIntentId: {
     type: String,
   },

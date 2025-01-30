@@ -15,6 +15,7 @@ const {
   resetPassword,
   toggleFollowUser,
   deleteAvatar,
+  getSingleUserByName,
 } = require("../controllers/userController");
 
 const userRoutes = Router();
@@ -26,6 +27,7 @@ userRoutes.post("/register", catchAsync(register));
 userRoutes.put("/:id", catchAsync(updateUser));
 userRoutes.put("/delete-avatar/:id", catchAsync(deleteAvatar));
 userRoutes.get("/getAdminAllUsers", catchAsync(getAdminAllUsers));
+userRoutes.get("/userByName/:username", catchAsync(getSingleUserByName));
 userRoutes.get("/getUser/:id", catchAsync(getSingleUser));
 userRoutes.post("/login", catchAsync(login));
 userRoutes.delete("/:id", catchAsync(deleteUser));

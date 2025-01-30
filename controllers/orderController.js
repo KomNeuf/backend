@@ -69,127 +69,6 @@ const getDistrictId = async (cityName) => {
     return null;
   }
 };
-// exports.createOrder = async (req, res) => {
-//   const { buyer, seller } = req.body;
-//   try {
-//     const order = new Order({
-//       ...req.body,
-//     });
-//     await order.save();
-
-//     const newOrder = await Order.findOne({ _id: order._id })
-//       .populate("buyer")
-//       .populate("seller");
-
-//     const productId = newOrder.product;
-
-//     await Product.findByIdAndUpdate(productId, { status: "Sold Out" });
-
-//     const sender = await User.findById(buyer);
-//     const senderName = sender ? sender.name : "Unknown";
-
-//     const notificationEntry = new Notification({
-//       userId: seller,
-//       productId: productId,
-//       senderId: buyer,
-//       message: `You have a new order from ${senderName}`,
-//       detail: `Check your orders for more details.`,
-//     });
-
-//     await notificationEntry.save();
-
-//     global.io.to(seller).emit("newNotification", {
-//       message: `You have a new order from ${senderName}`,
-//       userId: seller,
-//       senderId: {
-//         id: buyer,
-//         avatar: sender?.avatar,
-//       },
-//       detail: `Order ID: ${newOrder._id}. Check your orders for more details.`,
-//       data: notificationEntry,
-//       time: new Date(),
-//     });
-
-//     const buyerCity = newOrder?.shippingAddress?.city;
-//     // const sellerCity = newOrder?.seller?.shipping?.city;
-
-//     if (!buyerCity) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Buyer or Seller city is missing",
-//       });
-//     }
-
-//     const districtId = await getDistrictId(buyerCity);
-//     // const pickupDistrictId = await getDistrictId(sellerCity);
-//     const pickupDistrictId = 2;
-
-//     if (!districtId || !pickupDistrictId) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid district IDs fetched from Sendit",
-//       });
-//     }
-
-//     const deliveryData = {
-//       pickup_district_id: pickupDistrictId, // You should get the pickup district ID based on your app logic
-//       district_id: districtId, // The district ID of the buyer (the delivery destination)
-//       name: newOrder?.buyer?.name,
-//       amount: newOrder.totalPrice,
-//       address: newOrder?.buyer?.shipping?.address || "Unknown Address",
-//       phone: "0661460360" || "",
-//       products: newOrder.product?._id,
-//       allow_open: 1,
-//       comment: "No Comment",
-//       allow_try: 1,
-//       products_from_stock: 0,
-//       option_exchange: 0,
-//       delivery_exchange_id: "",
-//     };
-
-//     try {
-//       const response = await axios.post(
-//         "https://app.sendit.ma/api/v1/deliveries",
-//         deliveryData,
-//         {
-//           headers: {
-//             Authorization: `Bearer 919054|xQ7VDx5lt2OENh8LkUH0uf0OPR6L2tpBzbetCvnf`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
-
-//       if (response.data.success) {
-//         newOrder.senditDelivery = response.data.data;
-//         await newOrder.save();
-
-//         return res.status(201).json({
-//           success: true,
-//           message: "Order and delivery created successfully!",
-//           data: newOrder,
-//         });
-//       }
-//     } catch (error) {
-//       console.error("Sendit API Error:", error.message);
-//       return res.status(500).json({
-//         success: false,
-//         message: "Error creating delivery in Sendit",
-//         error: error.message,
-//       });
-//     }
-
-//     res.status(201).json({
-//       success: true,
-//       data: newOrder,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Order creation failed",
-//       error: error.message,
-//     });
-//   }
-// };
 
 exports.createOrder = async (req, res) => {
   const { buyer, seller } = req.body;
@@ -262,9 +141,29 @@ exports.createOrder = async (req, res) => {
         newOrder.senditDelivery = response.data.data;
         await newOrder.save();
 
-        await Product.findByIdAndUpdate(newOrder.product, {
-          status: "Sold Out",
-        });
+        // await Product.findByIdAndUpdate(newOrder.product, {
+        //   status: "Sold Out",
+        // });
+
+        const product = await Product.findById(newOrder?.product);
+
+        if (!product) {
+          return res.status(404).json({
+            success: false,
+            message: "Product not found",
+          });
+        }
+
+        const updatedQuantity = product?.quantity - newOrder?.quantity;
+        const updateData = {};
+        if (updatedQuantity <= 0) {
+          updateData.status = "Sold Out";
+          updateData.quantity = 0;
+        } else {
+          updateData.quantity = updatedQuantity;
+        }
+
+        await Product.findByIdAndUpdate(newOrder?.product, updateData);
 
         const sender = await User.findById(buyer);
         const senderName = sender ? sender.name : "Unknown";
